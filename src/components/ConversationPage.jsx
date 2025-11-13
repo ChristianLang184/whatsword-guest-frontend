@@ -49,6 +49,7 @@ function ConversationPage() {
       
       recognition.onend = () => {
         console.log('🛑 Recognition ended')
+        console.log('Was listening:', isListening)
         setIsListening(false)
       }
       
@@ -91,17 +92,19 @@ function ConversationPage() {
       
       recognition.onerror = (event) => {
         console.error('❌ Recognition error:', event.error)
+        console.error('Error message:', event.message)
+        console.error('Error type:', event.type)
         setIsListening(false)
         
         if (event.error === 'not-allowed') {
           setError('Microphone permission denied. Please allow microphone access.')
         } else if (event.error === 'no-speech') {
-          // Restart recognition
-          setTimeout(() => {
-            if (recognitionRef.current) {
-              recognition.start()
-            }
-          }, 100)
+          console.log('⚠️ No speech detected, will restart...')
+          // Don't restart automatically - let user click again
+        } else if (event.error === 'aborted') {
+          console.log('⚠️ Recognition aborted')
+        } else {
+          console.log('⚠️ Unknown error:', event.error)
         }
       }
       
