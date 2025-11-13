@@ -252,28 +252,24 @@ function ConversationPage() {
     } else {
       console.log('▶️ Starting recognition...')
       
-      // Safari iOS workaround: Request permission first, then start recognition
+      // Two-step permission process for iOS Safari
       try {
-        // This triggers the permission popup on Safari iOS
-        console.log('📱 Requesting microphone access...')
-        await navigator.mediaDevices.getUserMedia({ audio: true })
-          .then(stream => {
-            console.log('✅ Microphone access granted')
-            // Don't stop the stream - keep it for Speech Recognition
-            // stream.getTracks().forEach(track => track.stop())
-          })
-          .catch(err => {
-            console.error('❌ Microphone access denied:', err)
-            throw new Error('Microphone permission denied')
-          })
+        // Step 1: Request microphone permission
+        console.log('📱 Step 1: Requesting microphone access...')
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        console.log('✅ Microphone access granted')
         
-        // Small delay to ensure permission is processed
-        await new Promise(resolve => setTimeout(resolve, 100))
+        // IMPORTANT: Stop the stream immediately!
+        // This allows Speech Recognition to request its own permission
+        stream.getTracks().forEach(track => track.stop())
+        console.log('🛑 Microphone stream stopped')
         
-        // Now start speech recognition
-        console.log('🎤 Starting speech recognition...')
+        // Step 2: Wait a bit, then request Speech Recognition permission
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        console.log('🎤 Step 2: Starting speech recognition...')
         recognitionRef.current.start()
-        console.log('✅ Recognition started')
+        console.log('✅ Recognition start called - waiting for permission popup...')
         
       } catch (err) {
         console.error('❌ Error:', err)
