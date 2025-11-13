@@ -220,6 +220,20 @@ function ConversationPage() {
     }
   }
   
+  const stopListening = () => {
+    if (!recognitionRef.current) return
+    
+    // Safari iOS workaround: call start() before stop()
+    if (navigator.vendor.indexOf('Apple') > -1) {
+      try {
+        recognitionRef.current.start()
+      } catch (err) {
+        // Ignore error if already started
+      }
+    }
+    recognitionRef.current.stop()
+  }
+  
   const toggleListening = async () => {
     console.log('🎤 Toggle listening clicked')
     
@@ -231,7 +245,7 @@ function ConversationPage() {
     
     if (isListening) {
       console.log('🛑 Stopping recognition...')
-      recognitionRef.current.stop()
+      stopListening()
     } else {
       console.log('▶️ Starting recognition...')
       
@@ -267,7 +281,7 @@ function ConversationPage() {
   
   const handleLeave = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop()
+      stopListening()
     }
     if (wsRef.current) {
       wsRef.current.close()
