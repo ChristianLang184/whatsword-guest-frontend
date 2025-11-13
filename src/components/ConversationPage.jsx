@@ -37,9 +37,10 @@ function ConversationPage() {
       
       // Initialize recognition
       const recognition = new SpeechRecognition()
-      recognition.continuous = true
+      recognition.continuous = false  // Better for mobile - restart manually
       recognition.interimResults = true
       recognition.lang = 'de-DE' // TODO: Make configurable
+      recognition.maxAlternatives = 1
       
       recognition.onstart = () => {
         console.log('🎤 Recognition started')
@@ -73,6 +74,18 @@ function ConversationPage() {
           console.log('📝 Final transcript:', finalTranscript)
           setLiveTranscript('')
           sendMessage(finalTranscript)
+          
+          // Restart recognition for next input (since continuous = false)
+          setTimeout(() => {
+            if (recognitionRef.current && !recognitionRef.current.recognizing) {
+              try {
+                recognitionRef.current.start()
+                console.log('🔄 Recognition restarted for next input')
+              } catch (err) {
+                console.log('Recognition already running or error:', err)
+              }
+            }
+          }, 500)
         }
       }
       
