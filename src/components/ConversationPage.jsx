@@ -207,16 +207,41 @@ function ConversationPage() {
     }
   }
   
-  const toggleListening = () => {
-    if (!recognitionRef.current) return
+  const toggleListening = async () => {
+    console.log('🎤 Toggle listening clicked')
+    
+    if (!recognitionRef.current) {
+      console.error('❌ Recognition ref is null!')
+      alert('Speech Recognition not initialized')
+      return
+    }
     
     if (isListening) {
+      console.log('🛑 Stopping recognition...')
       recognitionRef.current.stop()
     } else {
+      console.log('▶️ Starting recognition...')
+      
+      // First, request microphone permission explicitly
       try {
-        recognitionRef.current.start()
+        console.log('📱 Requesting microphone permission...')
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        console.log('✅ Microphone permission granted!')
+        
+        // Stop the stream immediately (we just needed permission)
+        stream.getTracks().forEach(track => track.stop())
+        
+        // Now start speech recognition
+        try {
+          recognitionRef.current.start()
+          console.log('✅ Recognition started!')
+        } catch (err) {
+          console.error('❌ Error starting recognition:', err)
+          alert('Speech Recognition Error: ' + err.message)
+        }
       } catch (err) {
-        console.error('Error starting recognition:', err)
+        console.error('❌ Microphone permission denied:', err)
+        alert('Please allow microphone access to use speech recognition.\n\nGo to Safari Settings → WhatsWord → Microphone → Allow')
       }
     }
   }
