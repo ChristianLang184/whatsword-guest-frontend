@@ -222,26 +222,32 @@ function ConversationPage() {
     } else {
       console.log('▶️ Starting recognition...')
       
-      // First, request microphone permission explicitly
+      // Safari iOS workaround: Request permission first, then start recognition
       try {
-        console.log('📱 Requesting microphone permission...')
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        console.log('✅ Microphone permission granted!')
+        // This triggers the permission popup on Safari iOS
+        console.log('📱 Requesting microphone access...')
+        await navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(stream => {
+            console.log('✅ Microphone access granted')
+            // Don't stop the stream - keep it for Speech Recognition
+            // stream.getTracks().forEach(track => track.stop())
+          })
+          .catch(err => {
+            console.error('❌ Microphone access denied:', err)
+            throw new Error('Microphone permission denied')
+          })
         
-        // Stop the stream immediately (we just needed permission)
-        stream.getTracks().forEach(track => track.stop())
+        // Small delay to ensure permission is processed
+        await new Promise(resolve => setTimeout(resolve, 100))
         
         // Now start speech recognition
-        try {
-          recognitionRef.current.start()
-          console.log('✅ Recognition started!')
-        } catch (err) {
-          console.error('❌ Error starting recognition:', err)
-          alert('Speech Recognition Error: ' + err.message)
-        }
+        console.log('🎤 Starting speech recognition...')
+        recognitionRef.current.start()
+        console.log('✅ Recognition started')
+        
       } catch (err) {
-        console.error('❌ Microphone permission denied:', err)
-        alert('Please allow microphone access to use speech recognition.\n\nGo to Safari Settings → WhatsWord → Microphone → Allow')
+        console.error('❌ Error:', err)
+        alert('Please allow microphone access!\n\nTap "Allow" when asked.')
       }
     }
   }
